@@ -4,6 +4,9 @@ const morgan = require('morgan')
 const cors = require('cors')
 const app = express()
 const Person = require('./models/person')
+const PORT = process.env.PORT || 3001;
+
+console.log(PORT);
 
 
 
@@ -19,11 +22,19 @@ app.use(cors())
 
 
 app.get('/info', (request, response) => {
-    const currentTime = new Date()
-    response.send(
-        `<p>Phonebook has info for ${persons.length} people</p>
-         <p>${currentTime}</p>`
-      )
+  const currentTime = new Date();
+
+  Person.countDocuments({})
+      .then(count => {
+          response.send(
+              `<p>Phonebook has info for ${count} people</p>
+              <p>${currentTime}</p>`
+          );
+      })
+      .catch(error => {
+          console.error('Error fetching count:', error);
+          response.status(500).send('Error fetching count');
+      });
 })
 
 app.get('/api/persons/:id', (request, response, next) => {
@@ -56,7 +67,7 @@ app.delete('/api/persons/:id', (request, response, next) => {
   response.status(204).end()
 })
 
-app.get('/api/persons', (request, response) => {
+app.get('/api/persons', (request, response, next) => {
   
   Person.find({}).then(result => {
     response.json(result);
@@ -98,7 +109,7 @@ app.post('/api/persons', (request, response, next) => {
           }
       })
       .catch(error => next(error))
-      
+
       .then(savedPerson => {
 
           response.json(savedPerson);
@@ -143,7 +154,7 @@ const errorHandler = (error, request, response, next) => {
 
 app.use(errorHandler)
 
-const PORT = process.env.PORT
+
 app.listen(PORT, () => {
 console.log(`Server running on port ${PORT}`)
 })
